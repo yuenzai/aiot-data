@@ -1,4 +1,4 @@
-package cn.ecosync.aiot.data.apiserver.controller;
+package cn.ecosync.aiot.data.apiserver.edge.gateway;
 
 import cn.ecosync.aiot.data.apiserver.api.prometheus.Request;
 import cn.ecosync.aiot.data.apiserver.api.prometheus.Sample;
@@ -16,7 +16,7 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.context.request.async.DeferredResult;
 import org.xerial.snappy.Snappy;
 
@@ -25,21 +25,21 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.concurrent.CompletableFuture;
 
+import static cn.ecosync.aiot.data.apiserver.edge.gateway.EdgeGatewayConstants.TOPIC_AIOT_EDGE_GATEWAY_PROMETHEUS;
 import static org.springframework.http.HttpStatus.*;
 
-@RestController
-@RequestMapping("/prometheus")
-public class PrometheusRemoteWriteController {
-    private static final Logger log = LoggerFactory.getLogger(PrometheusRemoteWriteController.class);
-    public static final String TOPIC_PROMETHEUS_REMOTE_WRITE = "prometheus-remote-write";
+@ResponseBody
+@RequestMapping("/edge/gateway")
+public class EdgeGatewayController {
+    private static final Logger log = LoggerFactory.getLogger(EdgeGatewayController.class);
 
     private final KafkaTemplate<String, byte[]> kafkaTemplate;
 
-    public PrometheusRemoteWriteController(KafkaTemplate<String, byte[]> kafkaTemplate) {
+    public EdgeGatewayController(KafkaTemplate<String, byte[]> kafkaTemplate) {
         this.kafkaTemplate = kafkaTemplate;
     }
 
-    @PostMapping(value = "/api/v1/write")
+    @PostMapping(value = "/prometheus/api/v1/write")
     public DeferredResult<ResponseEntity<Void>> onMessage(InputStream inputStream, @RequestHeader HttpHeaders requestHeaders) {
         log.atInfo().addKeyValue("requestHeaders", requestHeaders).log("");
         String gatewayCode = requestHeaders.getFirst("Gateway-Code");
@@ -50,9 +50,9 @@ public class PrometheusRemoteWriteController {
             Request request = Request.parseFrom(uncompress);
             CompletableFuture<SendResult<String, byte[]>> completableFuture;
             if (StringUtils.hasText(gatewayCode)) {
-                completableFuture = kafkaTemplate.send(TOPIC_PROMETHEUS_REMOTE_WRITE, gatewayCode, bytes);
+                completableFuture = kafkaTemplate.send(TOPIC_AIOT_EDGE_GATEWAY_PROMETHEUS, gatewayCode, bytes);
             } else {
-                completableFuture = kafkaTemplate.send(TOPIC_PROMETHEUS_REMOTE_WRITE, bytes);
+                completableFuture = kafkaTemplate.send(TOPIC_AIOT_EDGE_GATEWAY_PROMETHEUS, bytes);
             }
             completableFuture.whenComplete((result, ex) -> {
                 if (ex == null) {
