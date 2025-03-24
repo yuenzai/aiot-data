@@ -15,8 +15,26 @@ spring:
       value-serializer: org.apache.kafka.common.serialization.ByteArraySerializer
       properties:
         enable.idempotence: true
+    consumer:
+      group-id: ${spring.application.name}
+      auto-offset-reset: latest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.ByteArraySerializer
     listener:
       ack-mode: manual
+    streams:
+      application-id: ${spring.application.name}-streams
+      bootstrap-servers: ${spring.kafka.bootstrap-servers}
+      cleanup:
+        on-startup: true
+        on-shutdown: true
+      state-dir: rocksdb
+      properties:
+        default.key.serde: org.apache.kafka.common.serialization.Serdes$StringSerde
+        default.value.serde: org.apache.kafka.common.serialization.Serdes$ByteArraySerde
+        num.stream.threads: 1
+        default.dsl.store: rocksDB
+      auto-startup: true
 ---
 logging:
   pattern:
