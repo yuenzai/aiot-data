@@ -1,5 +1,6 @@
 package cn.ecosync.aiot.data.apiserver.edge.gateway.kafka;
 
+import org.apache.kafka.clients.admin.NewTopic;
 import org.apache.kafka.common.serialization.Serde;
 import org.apache.kafka.common.serialization.Serdes;
 import org.apache.kafka.streams.KafkaStreams;
@@ -20,7 +21,12 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.kafka.annotation.EnableKafkaStreams;
+import org.springframework.kafka.config.TopicBuilder;
+import org.springframework.kafka.core.KafkaAdmin;
 
+import java.util.stream.Stream;
+
+import static cn.ecosync.aiot.data.apiserver.edge.gateway.EdgeGatewayConstants.TOPIC_AIOT_EDGE_GATEWAY_PROMETHEUS;
 import static org.apache.kafka.common.serialization.Serdes.String;
 
 @EnableKafkaStreams
@@ -28,6 +34,14 @@ import static org.apache.kafka.common.serialization.Serdes.String;
 @ConditionalOnClass(KafkaStreams.class)
 @ConditionalOnProperty(prefix = "spring.kafka.streams", name = "bootstrap-servers")
 public class EdgeGatewayKafkaConfiguration {
+    @Bean
+    public KafkaAdmin.NewTopics topics() {
+        NewTopic[] newTopics = Stream.of(TOPIC_AIOT_EDGE_GATEWAY_PROMETHEUS)
+                .map(in -> TopicBuilder.name(in).build())
+                .toArray(NewTopic[]::new);
+        return new KafkaAdmin.NewTopics(newTopics);
+    }
+
     @Bean
     public EdgeGatewayKafkaStreams edgeGatewayKafkaStreams(StreamsBuilder streamsBuilder) {
         return new EdgeGatewayKafkaStreams(streamsBuilder);
