@@ -9,6 +9,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.InitializingBean;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.stream.Collectors;
 
 import static cn.ecosync.aiot.data.apiserver.edge.gateway.EdgeGatewayConstants.TOPIC_AIOT_EDGE_GATEWAY_PROMETHEUS;
@@ -57,6 +58,6 @@ public class EdgeGatewayKafkaStreams implements InitializingBean {
     }
 
     private void logging(String key, String[] labels) {
-        log.atInfo().addKeyValue("key", key).addKeyValue("labels", labels).log("TimeSeries");
+        log.atInfo().addKeyValue("key", key).addKeyValue("labels", Arrays.toString(labels)).log("TimeSeries");
     }
 }
