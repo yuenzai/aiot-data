@@ -12,6 +12,23 @@ services:
       - ./apiserver/boot/target/aiot-data-apiserver-boot-0.0.1-SNAPSHOT.jar:/opt/app/aiot-data-apiserver-boot-0.0.1-SNAPSHOT.jar
     command: [ "java", "-jar", "/opt/app/aiot-data-apiserver-boot-0.0.1-SNAPSHOT.jar" ]
 
+  spark-sql:
+    build: ./spark
+    image: ecosync/spark:3.5.5
+    ports:
+      - "10000:10000"
+    depends_on:
+      spark-master:
+        condition: service_started
+    environment:
+      - HIVE_SERVER2_THRIFT_BIND_HOST=0.0.0.0
+      - HIVE_SERVER2_THRIFT_PORT=10000
+      - SPARK_NO_DAEMONIZE=true
+    command:
+      - "/opt/spark/sbin/start-thriftserver.sh"
+      - "--master"
+      - "spark://spark-master:7077"
+
   spark-master:
     build: ./spark
     image: ecosync/spark:3.5.5
@@ -30,6 +47,9 @@ services:
   spark-worker:
     build: ./spark
     image: ecosync/spark:3.5.5
+    depends_on:
+      spark-master:
+        condition: service_started
     environment:
       - SPARK_WORKER_CORES=1
       - SPARK_WORKER_MEMORY=1g
