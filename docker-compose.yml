@@ -39,6 +39,7 @@ services:
       - SPARK_NO_DAEMONIZE=true
       - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID:?}
       - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY:?}
+      - AWS_REGION=${AWS_REGION:?}
     volumes:
       - ./spark/spark-defaults.conf:/opt/spark/conf/spark-defaults.conf
     command:
@@ -103,6 +104,3 @@ services:
     volumes:
       - ./nginx/nginx.conf:/etc/nginx/nginx.conf
       - ./nginx/templates:/etc/nginx/templates
-
-# /opt/entrypoint.sh $SPARK_HOME/sbin/start-master.sh --host 0.0.0.0
-# docker run -it --rm spark:3.5.5-scala2.12-java17-ubuntu bash
