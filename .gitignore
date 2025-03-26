@@ -9,3 +9,5 @@ rocksdb/
 
 ### Mac OS ###
 .DS_Store
+
+spark/jars

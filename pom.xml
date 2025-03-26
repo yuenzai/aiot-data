@@ -17,5 +17,6 @@
 
     <modules>
         <module>apiserver</module>
+        <module>spark</module>
     </modules>
 </project>
