@@ -9,8 +9,8 @@ services:
     build: ./apiserver
     image: ecosync/aiot-data-apiserver:0.0.1
     volumes:
-      - ./apiserver/boot/target/aiot-data-apiserver-boot-0.0.1-SNAPSHOT.jar:/opt/app/aiot-data-apiserver-boot-0.0.1-SNAPSHOT.jar
-    command: [ "java", "-jar", "/opt/app/aiot-data-apiserver-boot-0.0.1-SNAPSHOT.jar" ]
+      - ./boot/target/aiot-data-boot-0.0.1-SNAPSHOT.jar:/opt/app/aiot-data-boot-0.0.1-SNAPSHOT.jar
+    command: [ "java", "-jar", "/opt/app/aiot-data-boot-0.0.1-SNAPSHOT.jar" ]
 
   spark-sql:
     build: ./spark

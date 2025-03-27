@@ -16,7 +16,86 @@
     <packaging>pom</packaging>
 
     <modules>
-        <module>apiserver</module>
+        <module>common</module>
+        <module>api</module>
+        <module>web</module>
+        <module>kafka</module>
+        <module>boot</module>
         <module>spark</module>
     </modules>
+
+    <properties>
+        <aiot-data.version>0.0.1-SNAPSHOT</aiot-data.version>
+        <springdoc.version>2.7.0</springdoc.version>
+        <swagger-api.version>2.2.25</swagger-api.version>
+        <protobuf.version>4.30.0</protobuf.version>
+        <snappy.version>1.1.10.5</snappy.version>
+        <!-- spark -->
+        <awssdk.version>2.29.52</awssdk.version>
+        <iceberg.version>1.8.1</iceberg.version>
+        <spark.version>3.5.5</spark.version>
+    </properties>
+
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>cn.ecosync.aiot.data</groupId>
+                <artifactId>aiot-data-common</artifactId>
+                <version>${aiot-data.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>cn.ecosync.aiot.data</groupId>
+                <artifactId>aiot-data-api</artifactId>
+                <version>${aiot-data.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>cn.ecosync.aiot.data</groupId>
+                <artifactId>aiot-data-web</artifactId>
+                <version>${aiot-data.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>cn.ecosync.aiot.data</groupId>
+                <artifactId>aiot-data-kafka</artifactId>
+                <version>${aiot-data.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.springdoc</groupId>
+                <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+                <version>${springdoc.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.swagger.core.v3</groupId>
+                <artifactId>swagger-annotations</artifactId>
+                <version>${swagger-api.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.google.protobuf</groupId>
+                <artifactId>protobuf-java</artifactId>
+                <version>${protobuf.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.xerial.snappy</groupId>
+                <artifactId>snappy-java</artifactId>
+                <version>${snappy.version}</version>
+            </dependency>
+            <!-- spark -->
+            <dependency>
+                <groupId>software.amazon.awssdk</groupId>
+                <artifactId>bom</artifactId>
+                <version>${awssdk.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.iceberg</groupId>
+                <artifactId>iceberg-spark-runtime-3.5_2.12</artifactId>
+                <version>${iceberg.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.spark</groupId>
+                <artifactId>spark-sql-kafka-0-10_2.12</artifactId>
+                <version>${spark.version}</version>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
 </project>
