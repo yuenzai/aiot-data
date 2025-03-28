@@ -4,8 +4,12 @@ import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SparkSession;
 import org.apache.spark.sql.catalyst.analysis.NoSuchTableException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class KafkaToS3BatchJob {
+    private static final Logger log = LoggerFactory.getLogger(KafkaToS3BatchJob.class);
+
     public static void main(String[] args) throws NoSuchTableException {
         if (args.length != 3) {
             throw new IllegalArgumentException("topic, startingTimestamp and endingTimestamp args are required");
