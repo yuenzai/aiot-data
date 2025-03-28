@@ -9,29 +9,27 @@
         <version>0.0.1-SNAPSHOT</version>
     </parent>
 
-    <artifactId>aiot-data-web</artifactId>
+    <artifactId>aiot-data-spark-jobs</artifactId>
 
     <dependencies>
-        <dependency>
-            <groupId>cn.ecosync.aiot.data</groupId>
-            <artifactId>aiot-data-common</artifactId>
-        </dependency>
-        <dependency>
+        <!--<dependency>
             <groupId>cn.ecosync.aiot.data</groupId>
             <artifactId>aiot-data-api</artifactId>
-        </dependency>
+        </dependency>-->
         <dependency>
-            <groupId>com.google.protobuf</groupId>
-            <artifactId>protobuf-java</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.xerial.snappy</groupId>
-            <artifactId>snappy-java</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-web</artifactId>
+            <groupId>org.apache.spark</groupId>
+            <artifactId>spark-sql_2.12</artifactId>
             <scope>provided</scope>
         </dependency>
+        <dependency>
+            <groupId>org.apache.spark</groupId>
+            <artifactId>spark-sql-kafka-0-10_2.12</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <!--<dependency>
+            <groupId>org.apache.spark</groupId>
+            <artifactId>spark-protobuf_2.12</artifactId>
+            <scope>provided</scope>
+        </dependency>-->
     </dependencies>
 </project>

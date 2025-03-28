@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.context.request.async.DeferredResult;
+import org.xerial.snappy.Snappy;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -65,7 +66,8 @@ public class PrometheusApiController {
 
         try {
             byte[] bytes = toByteArray(inputStream);
-            Request request = PrometheusUtils.toRequest(bytes);
+            byte[] uncompress = Snappy.uncompress(bytes);
+            Request request = Request.parseFrom(uncompress);
             MultiValueMap<String, String> responseHeaders = new LinkedMultiValueMap<>(1);
             handle(request, (responseHeader, writtenCount) -> responseHeaders.set(responseHeader, writtenCount.toString()));
             // Send to kafka

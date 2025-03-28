@@ -1,12 +1,12 @@
 package cn.ecosync.aiot.data.kafka.streams;
 
-import cn.ecosync.aiot.data.prometheus.PrometheusUtils;
 import cn.ecosync.aiot.data.prometheus.api.Request;
 import org.apache.kafka.streams.StreamsBuilder;
 import org.apache.kafka.streams.kstream.Consumed;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.InitializingBean;
+import org.xerial.snappy.Snappy;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -44,7 +44,8 @@ public class PrometheusKafkaStreams implements InitializingBean {
 
     private Request toRequest(byte[] bytes) {
         try {
-            return PrometheusUtils.toRequest(bytes);
+            byte[] uncompress = Snappy.uncompress(bytes);
+            return Request.parseFrom(uncompress);
         } catch (IOException e) {
             log.atError().setCause(e).log("");
             return null;
