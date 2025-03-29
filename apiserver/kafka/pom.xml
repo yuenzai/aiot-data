@@ -5,20 +5,20 @@
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>cn.ecosync.aiot.data</groupId>
-        <artifactId>aiot-data-parent</artifactId>
+        <artifactId>aiot-data-apiserver-parent</artifactId>
         <version>0.0.1-SNAPSHOT</version>
     </parent>
 
-    <artifactId>aiot-data-kafka</artifactId>
+    <artifactId>aiot-data-apiserver-kafka</artifactId>
 
     <dependencies>
         <dependency>
             <groupId>cn.ecosync.aiot.data</groupId>
-            <artifactId>aiot-data-common</artifactId>
+            <artifactId>aiot-data-apiserver-common</artifactId>
         </dependency>
         <dependency>
             <groupId>cn.ecosync.aiot.data</groupId>
-            <artifactId>aiot-data-api</artifactId>
+            <artifactId>aiot-data-apiserver-api</artifactId>
         </dependency>
         <dependency>
             <groupId>com.google.protobuf</groupId>

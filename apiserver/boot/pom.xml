@@ -5,20 +5,20 @@
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>cn.ecosync.aiot.data</groupId>
-        <artifactId>aiot-data-parent</artifactId>
+        <artifactId>aiot-data-apiserver-parent</artifactId>
         <version>0.0.1-SNAPSHOT</version>
     </parent>
 
-    <artifactId>aiot-data-boot</artifactId>
+    <artifactId>aiot-data-apiserver-boot</artifactId>
 
     <dependencies>
         <dependency>
             <groupId>cn.ecosync.aiot.data</groupId>
-            <artifactId>aiot-data-web</artifactId>
+            <artifactId>aiot-data-apiserver-web</artifactId>
         </dependency>
         <dependency>
             <groupId>cn.ecosync.aiot.data</groupId>
-            <artifactId>aiot-data-kafka</artifactId>
+            <artifactId>aiot-data-apiserver-kafka</artifactId>
         </dependency>
         <dependency>
             <groupId>org.apache.kafka</groupId>

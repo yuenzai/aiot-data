@@ -5,7 +5,7 @@
     <mirrors>
         <mirror>
             <id>aliyunmaven</id>
-            <mirrorOf>central</mirrorOf>
+            <mirrorOf>*,!central</mirrorOf>
             <url>https://maven.aliyun.com/repository/central</url>
         </mirror>
     </mirrors>

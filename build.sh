@@ -1,4 +1,10 @@
 #!/bin/bash
+
+if [ -z $1 ]; then
+  echo "illegal argument"
+  exit 1
+fi
+
 ./mvnw --settings .mvn/wrapper/settings.xml clean package
 
 if [ ! $? -eq 0 ]; then
@@ -14,7 +20,4 @@ elif [ $1 == "apiserver" ]; then
   docker compose down apiserver && \
   docker compose up -d apiserver && \
   docker compose logs -f apiserver
-else
-  echo "illegal argument"
-  exit 1
 fi
