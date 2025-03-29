@@ -53,14 +53,6 @@
             <groupId>org.postgresql</groupId>
             <artifactId>postgresql</artifactId>
         </dependency>
-        <dependency>
-            <groupId>cn.ecosync.aiot.data</groupId>
-            <artifactId>aiot-data-apiserver-api</artifactId>
-        </dependency>
-        <!--<dependency>
-            <groupId>com.google.protobuf</groupId>
-            <artifactId>protobuf-java</artifactId>
-        </dependency>-->
     </dependencies>
 
     <build>

@@ -30,7 +30,6 @@
         <spark.version>3.5.5</spark.version>
         <awssdk.version>2.29.52</awssdk.version>
         <iceberg.version>1.8.1</iceberg.version>
-        <aiot-data-apiserver.version>0.0.1-SNAPSHOT</aiot-data-apiserver.version>
     </properties>
 
     <dependencyManagement>
@@ -61,11 +60,6 @@
                 <groupId>org.apache.iceberg</groupId>
                 <artifactId>iceberg-spark-runtime-3.5_2.12</artifactId>
                 <version>${iceberg.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>cn.ecosync.aiot.data</groupId>
-                <artifactId>aiot-data-apiserver-api</artifactId>
-                <version>${aiot-data-apiserver.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>

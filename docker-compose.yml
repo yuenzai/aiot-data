@@ -9,8 +9,8 @@ services:
     build: ./apiserver
     image: ecosync/aiot-data-apiserver:0.0.1
     volumes:
-      - ./boot/target/aiot-data-boot-0.0.1-SNAPSHOT.jar:/opt/app/aiot-data-boot-0.0.1-SNAPSHOT.jar
-    command: [ "java", "-jar", "/opt/app/aiot-data-boot-0.0.1-SNAPSHOT.jar" ]
+      - ./apiserver/boot/target/aiot-data-apiserver-boot-0.0.1-SNAPSHOT.jar:/opt/app/aiot-data-apiserver-boot-0.0.1-SNAPSHOT.jar
+    command: [ "java", "-jar", "/opt/app/aiot-data-apiserver-boot-0.0.1-SNAPSHOT.jar" ]
 
   spark-sql:
     build: ./spark
@@ -42,7 +42,8 @@ services:
       - AWS_REGION=${AWS_REGION:?}
     volumes:
       - ./spark/spark-defaults.conf:/opt/spark/conf/spark-defaults.conf
-      - ./spark-jobs/target/aiot-data-spark-jobs-0.0.1-SNAPSHOT.jar:/opt/spark/work-dir/aiot-data-spark-jobs-0.0.1-SNAPSHOT.jar
+      - ./spark/jobs/target/aiot-data-spark-jobs-0.0.1-SNAPSHOT.jar:/opt/spark/work-dir/aiot-data-spark-jobs-0.0.1-SNAPSHOT.jar
+      - ./proto/prometheus.desc:/opt/spark/work-dir/prometheus.desc
     command:
       - "/opt/spark/sbin/start-master.sh"
 

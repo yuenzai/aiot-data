@@ -27,43 +27,5 @@
             <artifactId>spark-protobuf_2.12</artifactId>
             <scope>provided</scope>
         </dependency>
-        <dependency>
-            <groupId>cn.ecosync.aiot.data</groupId>
-            <artifactId>aiot-data-apiserver-api</artifactId>
-            <scope>provided</scope>
-        </dependency>
     </dependencies>
-
-    <build>
-        <plugins>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-shade-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <phase>package</phase>
-                        <goals>
-                            <goal>shade</goal>
-                        </goals>
-                        <configuration>
-                            <relocations>
-                                <relocation>
-                                    <pattern>com.google.protobuf</pattern>
-                                    <shadedPattern>org.sparkproject.spark_protobuf.protobuf</shadedPattern>
-                                    <includes>
-                                        <include>com.google.protobuf.**</include>
-                                    </includes>
-                                </relocation>
-                            </relocations>
-                            <artifactSet>
-                                <excludes>
-                                    <exclude>com.google.protobuf:*</exclude>
-                                </excludes>
-                            </artifactSet>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-        </plugins>
-    </build>
 </project>

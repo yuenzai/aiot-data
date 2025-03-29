@@ -1,11 +1,21 @@
 package cn.ecosync.aiot.data.job;
 
+import org.apache.spark.sql.Column;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SparkSession;
+import org.apache.spark.sql.api.java.UDF1;
 import org.apache.spark.sql.catalyst.analysis.NoSuchTableException;
+import org.apache.spark.sql.types.DataTypes;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.xerial.snappy.Snappy;
+
+import java.io.IOException;
+
+import static org.apache.spark.sql.functions.callUDF;
+import static org.apache.spark.sql.functions.col;
+import static org.apache.spark.sql.protobuf.functions.from_protobuf;
 
 public class KafkaToS3BatchJob {
     private static final Logger log = LoggerFactory.getLogger(KafkaToS3BatchJob.class);
@@ -19,21 +29,25 @@ public class KafkaToS3BatchJob {
         String endingTimestamp = args[2];
 
         SparkSession spark = SparkSession.builder().appName("Kafka to S3").getOrCreate();
+        spark.udf().register("snappy_decode", (UDF1<byte[], byte[]>) KafkaToS3BatchJob::snappyDecode, DataTypes.BinaryType);
         load(transform(extract(spark, topic, startingTimestamp, endingTimestamp)));
         spark.stop();
     }
 
     private static Dataset<Row> extract(SparkSession spark, String topic, String startingTimestamp, String endingTimestamp) {
-        Dataset<Row> df = spark.read().format("kafka")
+        return spark.read().format("kafka")
                 .option("kafka.bootstrap.servers", "kafka:9092")
                 .option("subscribe", topic)
                 .option("startingTimestamp", startingTimestamp)
                 .option("endingTimestamp", endingTimestamp)
                 .load();
-        return df.selectExpr("CAST(key AS STRING)", "value", "timestamp");
     }
 
     private static Dataset<Row> transform(Dataset<Row> df) {
+        Column keyColumn = col("key").cast(DataTypes.StringType);
+        Column valueColumn = from_protobuf(callUDF("snappy_decode", col("value")), "Request", "prometheus.desc");
+        df = df.select(keyColumn, valueColumn, col("timestamp"));
+        df.show();
         return df;
     }
 
@@ -41,18 +55,11 @@ public class KafkaToS3BatchJob {
         df.writeTo("aiot.bronze.prometheus").append();
     }
 
-//    private static void udfRegister(SparkSession spark, Dataset<Row> df) {
-//        spark.udf().register("snappy_decode", (UDF1<byte[], byte[]>) KafkaToS3BatchJob::snappyDecode, DataTypes.BinaryType);
-//        df.withColumn("value", callUDF("snappy_decode", col("value")))
-//                .where(col("value").isNotNull())
-//                .select(from_protobuf(col("value"), Request.class.getCanonicalName()));
-//    }
-//
-//    private static byte[] snappyDecode(byte[] bytes) {
-//        try {
-//            return bytes != null ? Snappy.uncompress(bytes) : null;
-//        } catch (IOException e) {
-//            throw new RuntimeException("Snappy decompression failed", e);
-//        }
-//    }
+    private static byte[] snappyDecode(byte[] bytes) {
+        try {
+            return Snappy.uncompress(bytes);
+        } catch (IOException e) {
+            throw new RuntimeException("Snappy decompression failed", e);
+        }
+    }
 }
