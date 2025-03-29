@@ -44,10 +44,11 @@ public class KafkaToS3BatchJob {
     }
 
     private static Dataset<Row> transform(Dataset<Row> df) {
-        Column keyColumn = col("key").cast(DataTypes.StringType);
-        Column valueColumn = from_protobuf(callUDF("snappy_decode", col("value")), "Request", "prometheus.desc");
-        df = df.select(keyColumn, valueColumn, col("timestamp"));
-        df.show();
+//        Column keyColumn = col("key").cast(DataTypes.StringType);
+//        Column valueColumn = from_protobuf(callUDF("snappy_decode", col("value")), "Request", "prometheus.desc").as("value");
+//        df = df.select(keyColumn, valueColumn, col("timestamp"));
+//        df.show();
+        df = df.selectExpr("CAST(key as STRING)", "value", "timestamp");
         return df;
     }
 
