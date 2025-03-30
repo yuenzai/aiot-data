@@ -13,9 +13,10 @@ prometheus-write-2.0 \
 DROP TABLE aiot.bronze.prometheus PURGE;
 
 CREATE TABLE aiot.bronze.prometheus (
-    `key` STRING,
-    `value` BINARY,
-    `timestamp` TIMESTAMP
+    `offset` long,
+    `key` string,
+    `value` binary,
+    `timestamp` timestamp
 )
 USING iceberg
 PARTITIONED BY (day(`timestamp`), `key`);
