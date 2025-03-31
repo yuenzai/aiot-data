@@ -19,10 +19,12 @@ public class KafkaToS3Job {
 
     private static final String TEMP_KAFKA = "temp_kafka";
     // 只追加写，因为数据来自 Kafka 属于不可变数据，所以没有 Update 操作
-    private static final String STATEMENT_MERGE = "MERGE INTO %s target " +
-            "USING " + TEMP_KAFKA + " source " +
-            "ON target.offset = source.offset " +
-            "WHEN NOT MATCHED THEN INSERT *";
+    private static final String STATEMENT_MERGE = """
+            MERGE INTO %s target
+            USING %s source
+            ON target.offset = source.offset
+            WHEN NOT MATCHED THEN INSERT *
+            """;
 
     public static void main(String[] args) {
         if (args.length != 5) {
@@ -53,7 +55,8 @@ public class KafkaToS3Job {
 
         SparkSession spark = SparkSession.builder().appName("Kafka to S3").getOrCreate();
         extract(spark, topic, startingTimestamp, endingTimestamp);
-        spark.sql(String.format(STATEMENT_MERGE, tableName));
+        String sql = STATEMENT_MERGE.formatted(tableName, TEMP_KAFKA);
+        spark.sql(sql);
         spark.stop();
     }
 
