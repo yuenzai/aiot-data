@@ -75,6 +75,19 @@ services:
       KAFKA_NUM_PARTITIONS: ${DATA_KAFKA_NUM_PARTITIONS:-1}
       KAFKA_LOG_DIRS: /var/lib/kafka/data
 
+  prefect:
+    image: prefecthq/prefect:3.2.15-python3.9
+    environment:
+      PREFECT_SERVER_API_BASE_PATH: /prefect/api
+      PREFECT_SERVER_UI_SERVE_BASE: /prefect
+      PREFECT_SERVER_UI_API_URL: ${DATA_ORIGIN:?}/prefect/api
+    command:
+      - "prefect"
+      - "server"
+      - "start"
+      - "--host"
+      - "0.0.0.0"
+
   postgresql:
     image: postgres:14.17
     environment:
