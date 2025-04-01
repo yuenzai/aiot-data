@@ -81,6 +81,8 @@ services:
       PREFECT_SERVER_API_BASE_PATH: /prefect/api
       PREFECT_SERVER_UI_SERVE_BASE: /prefect
       PREFECT_SERVER_UI_API_URL: ${DATA_ORIGIN:?}/prefect/api
+      PREFECT_SERVER_DATABASE_CONNECTION_URL: postgresql+asyncpg://prefect:CJVixCszaS+7raa/5326YJDq3xrSBXHg@postgresql:5432/aiot_data
+      PREFECT_SERVER_DATABASE_NAME: prefect
     command:
       - "prefect"
       - "server"
