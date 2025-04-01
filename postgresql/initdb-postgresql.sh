@@ -1,21 +1,22 @@
 #!/bin/bash
 
-DATABASE=iceberg
-USERNAME=iceberg
-PASSWORD="CJVixCszaS+7raa/5326YJDq3xrSBXHg"
+create_schema() {
+local username=$1
+local password=$2
+cat <<-EOF
+\echo create schame: ${username}
+CREATE USER ${username} WITH PASSWORD '${password}';
+CREATE SCHEMA ${username} AUTHORIZATION ${username};
+ALTER USER ${username} SET search_path TO ${username};
+\echo schema created: ${username}
+EOF
+}
 
-echo "初始化数据库: $DATABASE..."
-psql --username postgres <<-EOSQL
-CREATE DATABASE $DATABASE;
-\c $DATABASE;
-CREATE USER $USERNAME WITH PASSWORD '$PASSWORD';
-CREATE SCHEMA $USERNAME AUTHORIZATION $USERNAME;
-ALTER USER $USERNAME SET search_path TO $USERNAME;
+psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" <<-EOSQL
+CREATE DATABASE aiot_data;
+\c aiot_data
+$(create_schema iceberg CJVixCszaS+7raa/5326YJDq3xrSBXHg)
+$(create_schema prefect CJVixCszaS+7raa/5326YJDq3xrSBXHg)
+SET search_path TO prefect;
+CREATE EXTENSION pg_trgm;
 EOSQL
-
-if [ $? -eq 0 ]; then
-    echo "数据库 $DATABASE 初始化成功！"
-else
-    echo "数据库 $DATABASE 初始化失败！"
-    exit 1
-fi
