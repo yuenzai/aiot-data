@@ -12,6 +12,11 @@ elif [ $1 == "spark" ]; then
   docker compose build spark-master && \
   docker compose down spark-master spark-worker && \
   docker compose up -d spark-master spark-worker && \
+  docker compose logs -f spark-master spark-worker
+elif [ $1 == "spark-master" ]; then
+  docker compose build spark-master && \
+  docker compose down spark-master && \
+  docker compose up -d spark-master && \
   docker compose logs -f spark-master
 elif [ $1 == "apiserver" ]; then
   docker compose down apiserver && \

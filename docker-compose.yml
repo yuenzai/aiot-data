@@ -27,8 +27,7 @@ services:
       - AWS_REGION=${AWS_REGION:?}
     volumes:
       - ./spark/spark-defaults.conf:/opt/spark/conf/spark-defaults.conf
-      - ./spark/jobs/target/aiot-data-spark-jobs-0.0.1-SNAPSHOT.jar:/opt/spark/work-dir/aiot-data-spark-jobs-0.0.1-SNAPSHOT.jar
-      - ./proto/prometheus.desc:/opt/spark/work-dir/prometheus.desc
+      - ./spark/workdir:/opt/spark/work-dir
     command:
       - "/opt/spark/sbin/start-master.sh"
 

@@ -11,3 +11,5 @@ rocksdb/
 .DS_Store
 
 spark/jars
+spark/workdir
+**/env
