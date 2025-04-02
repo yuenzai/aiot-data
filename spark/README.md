@@ -1,26 +1,18 @@
 ```bash
-docker compose exec -it spark-master /opt/spark/bin/spark-sql
+docker compose exec -it spark-master /opt/spark/bin/spark-sql --conf spark.sql.session.timeZone=Asia/Shanghai
 
 docker compose exec -it spark-master /opt/spark/bin/spark-submit \
 --class cn.ecosync.aiot.data.job.KafkaToS3Job \
 --master local \
-aiot-data-spark-jobs-0.0.1-SNAPSHOT.jar \
+--conf spark.sql.session.timeZone=Asia/Shanghai \
+aiot-data/aiot-data-spark-jobs-0.0.1-SNAPSHOT.jar \
 prometheus-write-2.0 \
-Asia/Shanghai \
-"2025-03-28 00:00:00" \
-"2025-03-31 00:00:00" \
-aiot.bronze.prometheus
-
-docker compose exec -it spark-master /opt/spark/bin/spark-submit \
---class cn.ecosync.aiot.data.job.KafkaToS3Job \
---master spark://spark-master:7077 \
---deploy-mode cluster \
-aiot-data-spark-jobs-0.0.1-SNAPSHOT.jar \
-prometheus-write-2.0 \
-Asia/Shanghai \
-"2025-03-29 00:00:00" \
-"2025-03-30 00:00:00" \
-aiot.bronze.prometheus
+aiot.bronze.prometheus \
+1743523200000 \
+-48
+# cluster 模式配置
+# --master spark://spark-master:7077 \
+# --deploy-mode cluster \
 ```
 ```sparksql
 DROP TABLE aiot.bronze.prometheus PURGE;

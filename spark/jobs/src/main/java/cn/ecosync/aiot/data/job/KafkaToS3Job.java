@@ -46,6 +46,7 @@ public class KafkaToS3Job {
     }
 
     private static void extract(SparkSession spark, String topic, long startingTimestamp, long endingTimestamp) {
+        log.info("topic: {}, startingTimestamp: {}, endingTimestamp: {}", topic, startingTimestamp, endingTimestamp);
         Dataset<Row> df = spark.read().format("kafka")
                 .option("kafka.bootstrap.servers", "kafka:9092")
                 .option("subscribe", topic)
