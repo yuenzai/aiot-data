@@ -5,7 +5,7 @@ target/
 
 ### IntelliJ IDEA ###
 .idea/
-rocksdb/
+**/*.iml
 
 ### Mac OS ###
 .DS_Store
@@ -13,3 +13,4 @@ rocksdb/
 spark/jars
 spark/workdir
 **/env
+rocksdb/
