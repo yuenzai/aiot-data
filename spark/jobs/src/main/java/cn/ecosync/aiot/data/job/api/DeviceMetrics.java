@@ -5,7 +5,7 @@ import java.time.Instant;
 
 public class DeviceMetrics implements Serializable {
     private Instant timestamp;
-    private Double value;
+    private double value;
     private String metricName;
     private String deviceCode;
     private String gatewayCode;
@@ -19,11 +19,11 @@ public class DeviceMetrics implements Serializable {
         this.timestamp = timestamp;
     }
 
-    public Double getValue() {
+    public double getValue() {
         return value;
     }
 
-    public void setValue(Double value) {
+    public void setValue(double value) {
         this.value = value;
     }
 

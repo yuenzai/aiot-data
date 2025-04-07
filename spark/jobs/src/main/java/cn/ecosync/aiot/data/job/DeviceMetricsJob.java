@@ -2,6 +2,7 @@ package cn.ecosync.aiot.data.job;
 
 import cn.ecosync.aiot.data.job.api.DeviceMetrics;
 import cn.ecosync.aiot.data.job.api.PrometheusRequest;
+import cn.ecosync.aiot.data.job.util.DurationParser;
 import org.apache.spark.sql.*;
 import org.apache.spark.sql.api.java.UDF1;
 import org.apache.spark.sql.catalyst.analysis.NoSuchTableException;
@@ -11,44 +12,55 @@ import org.slf4j.LoggerFactory;
 import org.xerial.snappy.Snappy;
 
 import java.io.IOException;
-import java.time.Instant;
+import java.time.*;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 
-import static org.apache.spark.sql.functions.*;
+import static org.apache.spark.sql.functions.callUDF;
+import static org.apache.spark.sql.functions.col;
 import static org.apache.spark.sql.protobuf.functions.from_protobuf;
 
-public class PrometheusToDeviceMetricsJob {
-    private static final Logger log = LoggerFactory.getLogger(PrometheusToDeviceMetricsJob.class);
+public class DeviceMetricsJob {
+    private static final Logger log = LoggerFactory.getLogger(DeviceMetricsJob.class);
     private static final String TABLE_NAME_SOURCE = "aiot.bronze.prometheus";
-    private static final String TABLE_NAME_TARGET = "aiot.silver.device_metrics";
+    private static final String TABLE_TARGET = "aiot.silver.device_metrics";
+    private static final String STATEMENT_CREATE_TABLE = """
+            CREATE TABLE IF NOT EXISTS %s (
+                `timestamp` timestamp,
+                `value` double,
+                `metricName` string,
+                `deviceCode` string,
+                `gatewayCode` string,
+                `job` string
+            )
+            USING iceberg
+            PARTITIONED BY (day(`timestamp`), `job`)
+            TBLPROPERTIES ('write.wap.enabled'='true')
+            """.formatted(TABLE_TARGET);
 
     public static void main(String[] args) throws NoSuchTableException {
-        log.info("args: {}", Arrays.toString(args));
-        if (args.length < 3) {
-            throw new IllegalArgumentException("args missing, require: mode timestamp offsetHour");
-        }
-        String mode = args[0];
-        if (!"append".equals(mode) && !"createOrReplace".equals(mode)) {
-            throw new IllegalArgumentException("mode not supported: " + mode + ", only accepted append or createOrReplace");
-        }
-        long timestamp = Long.parseLong(args[1]);
-        long offsetHour = Long.parseLong(args[2]);
-        long timestamp2 = timestamp + offsetHour * 60 * 60 * 1000;
-        long startingTimestamp = Math.min(timestamp, timestamp2);
-        long endingTimestamp = Math.max(timestamp, timestamp2);
+        SparkSession spark = SparkSession.builder().appName("DeviceMetrics").getOrCreate();
+        ZoneId zoneId = ZoneId.of(spark.conf().get("spark.sql.session.timeZone"));
+        ZonedDateTime startDateTime = LocalDateTime.parse(spark.conf().get("spark.aiot.dateTime"), DateTimeFormatter.ISO_LOCAL_DATE_TIME)
+                .atZone(zoneId);
+        Duration duration = DurationParser.parse(spark.conf().get("spark.aiot.timeWindow"));
+        ZonedDateTime endDateTime = startDateTime.plus(duration);
 
-        SparkSession spark = SparkSession.builder().appName("Prometheus to DeviceMetrics").getOrCreate();
-        spark.udf().register("snappy_decode", (UDF1<byte[], byte[]>) PrometheusToDeviceMetricsJob::snappyDecode, DataTypes.BinaryType);
-        etl(spark, mode, startingTimestamp, endingTimestamp);
+        spark.udf().register("snappy_decode", (UDF1<byte[], byte[]>) DeviceMetricsJob::snappyDecode, DataTypes.BinaryType);
+        String wapName = "audit";
+        spark.sql(STATEMENT_CREATE_TABLE);
+        spark.sql("ALTER TABLE aiot.silver.device_metrics CREATE BRANCH IF NOT EXISTS %s RETAIN 7 DAYS".formatted(wapName)).show();
+        spark.sql("SET spark.wap.branch = %s".formatted(wapName)).show();
+        etl(spark, startDateTime.toInstant(), endDateTime.toInstant());
         spark.stop();
     }
 
-    private static void etl(SparkSession spark, String mode, long startingTimestamp, long endingTimestamp) throws NoSuchTableException {
+    private static void etl(SparkSession spark, Instant startingTimestamp, Instant endingTimestamp) throws NoSuchTableException {
         // extract
         Column valueColumn = col("value");
         Dataset<Row> df = spark.table(TABLE_NAME_SOURCE)
                 .select(valueColumn)
-                .where("timestamp >= timestamp_millis(%d) and timestamp < timestamp_millis(%d)".formatted(startingTimestamp, endingTimestamp));
+                .where(col("timestamp").geq(startingTimestamp).and(col("timestamp").lt(endingTimestamp)));
         df.show();
         // transform
         Column decodedValueColumn = callUDF("snappy_decode", valueColumn);
@@ -57,25 +69,13 @@ public class PrometheusToDeviceMetricsJob {
                 .select(col("value.symbols"), col("value.timeseries"))
                 .as(Encoders.bean(PrometheusRequest.class));
         prometheusDS.show();
-        Dataset<DeviceMetrics> deviceMetricsDS = prometheusDS.flatMap(PrometheusToDeviceMetricsJob::flatMap, Encoders.bean(DeviceMetrics.class));
+        Dataset<DeviceMetrics> deviceMetricsDS = prometheusDS.flatMap(DeviceMetricsJob::flatMap, Encoders.bean(DeviceMetrics.class));
         deviceMetricsDS.show();
         // load
         if (deviceMetricsDS.count() == 0) {
             return;
         }
-        switch (mode) {
-            case "append":
-                deviceMetricsDS.writeTo(TABLE_NAME_TARGET)
-                        .append();
-                break;
-            case "createOrReplace":
-                deviceMetricsDS.writeTo(TABLE_NAME_TARGET)
-                        .partitionedBy(days(col("timestamp")), col("job"))
-                        .createOrReplace();
-                break;
-            default:
-                throw new IllegalStateException("nothing to do");
-        }
+        deviceMetricsDS.writeTo(TABLE_TARGET).append();
     }
 
     private static Iterator<DeviceMetrics> flatMap(PrometheusRequest request) {
@@ -103,7 +103,8 @@ public class PrometheusToDeviceMetricsJob {
             for (PrometheusRequest.Sample sample : samples) {
                 DeviceMetrics deviceMetrics = new DeviceMetrics();
                 deviceMetrics.setTimestamp(Instant.ofEpochMilli(sample.getTimestamp()));
-                deviceMetrics.setValue(sample.getValue());
+                Double value = sample.getValue();
+                deviceMetrics.setValue(value != null ? value : 0D);
                 deviceMetrics.setMetricName(metricName);
                 deviceMetrics.setDeviceCode(deviceCode);
                 deviceMetrics.setGatewayCode(gatewayCode);
@@ -122,3 +123,12 @@ public class PrometheusToDeviceMetricsJob {
         }
     }
 }
+//private static final String STATEMENT_MERGE = """
+//            MERGE INTO %s target
+//            USING %s source
+//            ON target.deviceCode = source.deviceCode
+//            AND target.metricName = source.metricName
+//            AND target.timestamp = source.timestamp
+//            WHEN NOT MATCHED THEN INSERT *
+//            WHEN MATCHED THEN UPDATE SET target.value = source.value
+//            """;

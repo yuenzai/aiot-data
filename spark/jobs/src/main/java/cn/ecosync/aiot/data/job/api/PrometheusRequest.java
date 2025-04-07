@@ -69,7 +69,7 @@ public class PrometheusRequest implements Serializable {
 
     public static class Sample implements Serializable {
         private Double value;
-        private Long timestamp;
+        private long timestamp;
 
         public Double getValue() {
             return value;
@@ -79,11 +79,11 @@ public class PrometheusRequest implements Serializable {
             this.value = value;
         }
 
-        public Long getTimestamp() {
+        public long getTimestamp() {
             return timestamp;
         }
 
-        public void setTimestamp(Long timestamp) {
+        public void setTimestamp(long timestamp) {
             this.timestamp = timestamp;
         }
     }
