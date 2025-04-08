@@ -11,7 +11,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xerial.snappy.Snappy;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.time.*;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
@@ -38,7 +40,7 @@ public class DeviceMetricsJob {
             TBLPROPERTIES ('write.wap.enabled'='true')
             """.formatted(TABLE_TARGET);
 
-    public static void main(String[] args) throws NoSuchTableException {
+    public static void main(String[] args) throws NoSuchTableException, IOException {
         SparkSession spark = SparkSession.builder().appName("DeviceMetrics").getOrCreate();
         ZoneId zoneId = ZoneId.of(spark.conf().get("spark.sql.session.timeZone"));
         ZonedDateTime startDateTime = LocalDateTime.parse(spark.conf().get("spark.aiot.dateTime"), DateTimeFormatter.ISO_LOCAL_DATE_TIME)
@@ -55,7 +57,7 @@ public class DeviceMetricsJob {
         spark.stop();
     }
 
-    private static void etl(SparkSession spark, Instant startingTimestamp, Instant endingTimestamp) throws NoSuchTableException {
+    private static void etl(SparkSession spark, Instant startingTimestamp, Instant endingTimestamp) throws NoSuchTableException, IOException {
         // extract
         Column valueColumn = col("value");
         Dataset<Row> df = spark.table(TABLE_NAME_SOURCE)
@@ -64,7 +66,8 @@ public class DeviceMetricsJob {
         df.show();
         // transform
         Column decodedValueColumn = callUDF("snappy_decode", valueColumn);
-        Column protobufValueColumn = from_protobuf(decodedValueColumn, "Request", "aiot-data/prometheus.desc");
+        byte[] descriptorFile = getDescriptorFile();
+        Column protobufValueColumn = from_protobuf(decodedValueColumn, "Request", descriptorFile);
         Dataset<PrometheusRequest> prometheusDS = df.withColumn("value", protobufValueColumn)
                 .select(col("value.symbols"), col("value.timeseries"))
                 .as(Encoders.bean(PrometheusRequest.class));
@@ -122,13 +125,22 @@ public class DeviceMetricsJob {
             throw new RuntimeException("Snappy decompression failed", e);
         }
     }
+
+    private static byte[] getDescriptorFile() throws IOException {
+        try (InputStream inputStream = DeviceMetricsJob.class.getResourceAsStream("/prometheus.desc")) {
+            if (inputStream == null) throw new IllegalStateException("prometheus.desc not found");
+            return toByteArray(inputStream);
+        }
+    }
+
+    private static byte[] toByteArray(InputStream inputStream) throws IOException {
+        ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+        int len;
+        byte[] data = new byte[1024];
+        while ((len = inputStream.read(data, 0, data.length)) != -1) {
+            buffer.write(data, 0, len);
+        }
+        buffer.flush();
+        return buffer.toByteArray();
+    }
 }
-//private static final String STATEMENT_MERGE = """
-//            MERGE INTO %s target
-//            USING %s source
-//            ON target.deviceCode = source.deviceCode
-//            AND target.metricName = source.metricName
-//            AND target.timestamp = source.timestamp
-//            WHEN NOT MATCHED THEN INSERT *
-//            WHEN MATCHED THEN UPDATE SET target.value = source.value
-//            """;

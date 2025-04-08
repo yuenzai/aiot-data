@@ -38,14 +38,16 @@ services:
       spark-master:
         condition: service_started
     environment:
-      - SPARK_WORKER_CORES=1
-      - SPARK_WORKER_MEMORY=1g
+      - SPARK_WORKER_CORES=2
+      - SPARK_WORKER_MEMORY=2g
       - SPARK_WORKER_WEBUI_PORT=8081
       - SPARK_NO_DAEMONIZE=true
       - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID:?}
       - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY:?}
+      - AWS_REGION=${AWS_REGION:?}
     volumes:
       - ./spark/spark-defaults.conf:/opt/spark/conf/spark-defaults.conf
+      - ./spark/workdir:/opt/spark/work-dir/aiot-data
     command:
       - "/opt/spark/sbin/start-worker.sh"
       - "spark://spark-master:7077"
