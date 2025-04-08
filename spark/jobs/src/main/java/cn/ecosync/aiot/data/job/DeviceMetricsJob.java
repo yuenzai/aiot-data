@@ -2,7 +2,7 @@ package cn.ecosync.aiot.data.job;
 
 import cn.ecosync.aiot.data.job.api.DeviceMetrics;
 import cn.ecosync.aiot.data.job.api.PrometheusRequest;
-import cn.ecosync.aiot.data.job.util.DurationParser;
+import cn.ecosync.aiot.data.job.util.SparkSessionUtils;
 import org.apache.spark.sql.*;
 import org.apache.spark.sql.api.java.UDF1;
 import org.apache.spark.sql.catalyst.analysis.NoSuchTableException;
@@ -14,8 +14,8 @@ import org.xerial.snappy.Snappy;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.time.*;
-import java.time.format.DateTimeFormatter;
+import java.time.Instant;
+import java.time.ZonedDateTime;
 import java.util.*;
 
 import static org.apache.spark.sql.functions.callUDF;
@@ -24,7 +24,7 @@ import static org.apache.spark.sql.protobuf.functions.from_protobuf;
 
 public class DeviceMetricsJob {
     private static final Logger log = LoggerFactory.getLogger(DeviceMetricsJob.class);
-    private static final String TABLE_NAME_SOURCE = "aiot.bronze.prometheus";
+    private static final String TABLE_NAME_SOURCE = "aiot.bronze.prometheus_write_2_0";
     private static final String TABLE_TARGET = "aiot.silver.device_metrics";
     private static final String STATEMENT_CREATE_TABLE = """
             CREATE TABLE IF NOT EXISTS %s (
@@ -41,28 +41,25 @@ public class DeviceMetricsJob {
             """.formatted(TABLE_TARGET);
 
     public static void main(String[] args) throws NoSuchTableException, IOException {
-        SparkSession spark = SparkSession.builder().appName("DeviceMetrics").getOrCreate();
-        ZoneId zoneId = ZoneId.of(spark.conf().get("spark.sql.session.timeZone"));
-        ZonedDateTime startDateTime = LocalDateTime.parse(spark.conf().get("spark.aiot.dateTime"), DateTimeFormatter.ISO_LOCAL_DATE_TIME)
-                .atZone(zoneId);
-        Duration duration = DurationParser.parse(spark.conf().get("spark.aiot.timeWindow"));
-        ZonedDateTime endDateTime = startDateTime.plus(duration);
-
+        SparkSession spark = SparkSession.builder().appName("DeviceMetricsJob").getOrCreate();
         spark.udf().register("snappy_decode", (UDF1<byte[], byte[]>) DeviceMetricsJob::snappyDecode, DataTypes.BinaryType);
         String wapName = "audit";
         spark.sql(STATEMENT_CREATE_TABLE);
         spark.sql("ALTER TABLE aiot.silver.device_metrics CREATE BRANCH IF NOT EXISTS %s RETAIN 7 DAYS".formatted(wapName)).show();
         spark.sql("SET spark.wap.branch = %s".formatted(wapName)).show();
-        etl(spark, startDateTime.toInstant(), endDateTime.toInstant());
+        etl(spark);
         spark.stop();
     }
 
-    private static void etl(SparkSession spark, Instant startingTimestamp, Instant endingTimestamp) throws NoSuchTableException, IOException {
+    private static void etl(SparkSession spark) throws NoSuchTableException, IOException {
+        SparkSessionUtils.JobConfig jobConfig = SparkSessionUtils.getJobConfig(spark);
+        ZonedDateTime startDateTime = jobConfig.getStartDateTime();
+        ZonedDateTime endDateTime = jobConfig.getEndDateTime();
         // extract
         Column valueColumn = col("value");
         Dataset<Row> df = spark.table(TABLE_NAME_SOURCE)
                 .select(valueColumn)
-                .where(col("timestamp").geq(startingTimestamp).and(col("timestamp").lt(endingTimestamp)));
+                .where(col("timestamp").geq(startDateTime.toInstant()).and(col("timestamp").lt(endDateTime.toInstant())));
         df.show();
         // transform
         Column decodedValueColumn = callUDF("snappy_decode", valueColumn);

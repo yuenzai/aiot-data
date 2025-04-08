@@ -3,12 +3,12 @@ docker compose exec -it spark-master /opt/spark/bin/spark-sql --conf spark.sql.s
 docker compose exec -it spark-master /opt/spark/bin/spark-sql --conf spark.sql.session.timeZone=Asia/Shanghai --conf spark.wap.branch=audit
 # 提交 Spark 任务
 docker compose exec -it spark-master /opt/spark/bin/spark-submit \
---class cn.ecosync.aiot.data.job.DeviceMetricsJob \
 --master spark://spark-master:7077 \
 --deploy-mode client \
 --conf spark.sql.session.timeZone=Asia/Shanghai \
 --conf spark.aiot.dateTime=2025-04-06T00:00:00 \
 --conf spark.aiot.timeWindow=24h \
+--class cn.ecosync.aiot.data.job.DeviceMetricsJob \
 aiot-data/aiot-data-spark-jobs-0.0.1-SNAPSHOT.jar
 ```
 ```sparksql
