@@ -11,9 +11,9 @@ import java.time.format.DateTimeFormatter;
 public class SparkSessionUtils {
     public static JobConfig getJobConfig(SparkSession spark) {
         ZoneId zoneId = ZoneId.of(spark.conf().get("spark.sql.session.timeZone"));
-        ZonedDateTime startDateTime = LocalDateTime.parse(spark.conf().get("spark.aiot.dateTime"), DateTimeFormatter.ISO_LOCAL_DATE_TIME)
+        ZonedDateTime startDateTime = LocalDateTime.parse(spark.conf().get("spark.aiot.datetime"), DateTimeFormatter.ISO_ZONED_DATE_TIME)
                 .atZone(zoneId);
-        Duration duration = DurationParser.parse(spark.conf().get("spark.aiot.timeWindow"));
+        Duration duration = Duration.parse(spark.conf().get("spark.aiot.duration"));
         return new JobConfig(zoneId, startDateTime, duration);
     }
 
