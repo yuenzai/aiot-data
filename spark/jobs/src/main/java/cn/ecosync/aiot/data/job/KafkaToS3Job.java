@@ -20,7 +20,7 @@ public class KafkaToS3Job {
                 `timestamp` timestamp
             )
             USING iceberg
-            PARTITIONED BY (day(`timestamp`), `key`);
+            PARTITIONED BY (day(`timestamp`), `key`)
             """;
     private static final String STATEMENT_WRITE = """
             MERGE INTO %s target
@@ -53,6 +53,7 @@ public class KafkaToS3Job {
                 .option("subscribe", topic)
                 .option("startingTimestamp", String.valueOf(startDateTime.toInstant().toEpochMilli()))
                 .option("endingTimestamp", String.valueOf(endDateTime.toInstant().toEpochMilli()))
+                .option("fetchOffset.numRetries", 1)
                 .load();
         df = df.selectExpr("CAST(key AS STRING)", "value", "offset", "timestamp");
         // transform
