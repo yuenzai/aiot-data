@@ -10,7 +10,7 @@ Description=${SERVICE_NAME}
 [Service]
 Environment="PREFECT_API_URL=http://localhost/prefect/api"
 WorkingDirectory=${WORKDIR}
-ExecStart=${WORKDIR}/prefect/env/bin/python ${WORKDIR}/prefect/kafka_to_s3.py
+ExecStart=${WORKDIR}/prefect/env/bin/python ${WORKDIR}/prefect/example_flow.py
 Restart=always
 
 [Install]
