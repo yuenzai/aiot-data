@@ -17,7 +17,8 @@ public class KafkaToS3Job {
                 `offset` long,
                 `key` string,
                 `value` binary,
-                `timestamp` timestamp
+                `timestamp` timestamp,
+                `headers` array<struct<key:string,value:binary>>
             )
             USING iceberg
             PARTITIONED BY (day(`timestamp`), `key`)
@@ -53,9 +54,11 @@ public class KafkaToS3Job {
                 .option("subscribe", topic)
                 .option("startingTimestamp", String.valueOf(startDateTime.toInstant().toEpochMilli()))
                 .option("endingTimestamp", String.valueOf(endDateTime.toInstant().toEpochMilli()))
+                .option("includeHeaders", "true")
                 .option("fetchOffset.numRetries", 1)
                 .load();
-        df = df.selectExpr("CAST(key AS STRING)", "value", "offset", "timestamp");
+        df = df.selectExpr("CAST(key AS STRING)", "value", "offset", "timestamp", "headers");
+        df.show();
         // transform
         // load
         df.createOrReplaceTempView(TMP_KAFKA);
