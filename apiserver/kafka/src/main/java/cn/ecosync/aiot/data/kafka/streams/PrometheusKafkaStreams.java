@@ -12,7 +12,7 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.stream.Collectors;
 
-import static cn.ecosync.aiot.data.prometheus.PrometheusUtils.TOPIC_PROMETHEUS_WRITE_20;
+import static cn.ecosync.aiot.data.prometheus.PrometheusUtils.TOPIC_PROMETHEUS;
 import static org.apache.kafka.common.serialization.Serdes.ByteArray;
 import static org.apache.kafka.common.serialization.Serdes.String;
 
@@ -35,7 +35,7 @@ public class PrometheusKafkaStreams implements InitializingBean {
     }
 
     private void afterPropertiesSetImpl() {
-        streamsBuilder.stream(TOPIC_PROMETHEUS_WRITE_20, Consumed.with(String(), ByteArray()))
+        streamsBuilder.stream(TOPIC_PROMETHEUS, Consumed.with(String(), ByteArray()))
                 .mapValues(this::toRequest)
                 .filter((key, value) -> value != null)
                 .flatMapValues(this::flatToTimeSeries)

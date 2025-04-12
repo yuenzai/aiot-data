@@ -28,7 +28,7 @@ def kafka_to_s3_task(
           --conf spark.aiot.duration={duration} \
           --class cn.ecosync.aiot.data.job.KafkaToS3Job \
           aiot-data/aiot-data-spark-jobs-0.0.1-SNAPSHOT.jar \
-          prometheus-write-2.0
+          prometheus
           """
     print(cmd)
     with ShellOperation(commands=[cmd]) as operation:

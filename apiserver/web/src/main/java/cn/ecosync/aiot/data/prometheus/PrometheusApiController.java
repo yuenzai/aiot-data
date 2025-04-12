@@ -1,5 +1,6 @@
 package cn.ecosync.aiot.data.prometheus;
 
+import cn.ecosync.aiot.data.CollectionUtils;
 import cn.ecosync.aiot.data.EventBus;
 import cn.ecosync.aiot.data.prometheus.api.Request;
 import cn.ecosync.aiot.data.prometheus.api.TimeSeries;
@@ -20,6 +21,7 @@ import org.xerial.snappy.Snappy;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Map;
 import java.util.function.BiConsumer;
 
 import static cn.ecosync.aiot.data.prometheus.PrometheusUtils.*;
@@ -47,18 +49,18 @@ public class PrometheusApiController {
             return deferredResult;
         }
 
-        log.atInfo().addKeyValue("gatewayCode", gatewayCode).log("Prometheus remote-write data received from edge-gateway");
+        log.atInfo().addKeyValue("gateway-code", gatewayCode).log("Prometheus remote-write data received from edge-gateway");
 
         String contentEncoding = requestHeaders.getFirst("Content-Encoding");
         if (!"snappy".equals(contentEncoding)) {
-            log.atError().addKeyValue("contentEncoding", contentEncoding).log("Unknown Content-Encoding, only 'snappy' supported");
+            log.atError().addKeyValue("content-encoding", contentEncoding).log("Unknown Content-Encoding, only 'snappy' supported");
             deferredResult.setErrorResult(new ResponseEntity<>(UNSUPPORTED_MEDIA_TYPE));
             return deferredResult;
         }
 
         String contentType = requestHeaders.getFirst(HttpHeaders.CONTENT_TYPE);
         if (!"application/x-protobuf;proto=io.prometheus.write.v2.Request".equals(contentType)) {
-            log.atError().addKeyValue("contentType", contentType)
+            log.atError().addKeyValue("content-type", contentType)
                     .log("Unknown Content-Type, only 'application/x-protobuf;proto=io.prometheus.write.v2.Request' supported");
             deferredResult.setErrorResult(new ResponseEntity<>(UNSUPPORTED_MEDIA_TYPE));
             return deferredResult;
@@ -70,8 +72,11 @@ public class PrometheusApiController {
             Request request = Request.parseFrom(uncompress);
             MultiValueMap<String, String> responseHeaders = new LinkedMultiValueMap<>(1);
             handle(request, (responseHeader, writtenCount) -> responseHeaders.set(responseHeader, writtenCount.toString()));
+            Map<String, String> headers = CollectionUtils.newLinkedHashMap(2);
+            headers.put("content-encoding", contentEncoding);
+            headers.put("content-type", contentType);
             // Send to kafka
-            eventBus.send(TOPIC_PROMETHEUS_WRITE_20, gatewayCode, bytes)
+            eventBus.send(TOPIC_PROMETHEUS, gatewayCode, bytes, headers)
                     .whenComplete((result, ex) -> {
                         if (ex == null) {
                             deferredResult.setResult(new ResponseEntity<>(responseHeaders, NO_CONTENT));

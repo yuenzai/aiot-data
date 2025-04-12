@@ -14,7 +14,7 @@ import org.springframework.kafka.core.KafkaTemplate;
 
 import java.util.stream.Stream;
 
-import static cn.ecosync.aiot.data.prometheus.PrometheusUtils.TOPIC_PROMETHEUS_WRITE_20;
+import static cn.ecosync.aiot.data.prometheus.PrometheusUtils.TOPIC_PROMETHEUS;
 
 @Configuration(proxyBeanMethods = false)
 @ConditionalOnProperty(prefix = "spring.kafka", name = "bootstrap-servers")
@@ -22,7 +22,7 @@ import static cn.ecosync.aiot.data.prometheus.PrometheusUtils.TOPIC_PROMETHEUS_W
 public class KafkaConfiguration {
     @Bean
     public KafkaAdmin.NewTopics topics() {
-        NewTopic[] newTopics = Stream.of(TOPIC_PROMETHEUS_WRITE_20)
+        NewTopic[] newTopics = Stream.of(TOPIC_PROMETHEUS)
                 .map(in -> TopicBuilder.name(in).build())
                 .toArray(NewTopic[]::new);
         return new KafkaAdmin.NewTopics(newTopics);

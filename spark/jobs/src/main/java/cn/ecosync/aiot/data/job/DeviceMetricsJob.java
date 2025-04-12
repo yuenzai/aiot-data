@@ -24,7 +24,7 @@ import static org.apache.spark.sql.protobuf.functions.from_protobuf;
 
 public class DeviceMetricsJob {
     private static final Logger log = LoggerFactory.getLogger(DeviceMetricsJob.class);
-    private static final String TABLE_NAME_SOURCE = "aiot.bronze.prometheus_write_2_0";
+    private static final String TABLE_NAME_SOURCE = "aiot.bronze.prometheus";
     private static final String TABLE_TARGET = "aiot.silver.device_metrics";
     private static final String STATEMENT_CREATE_TABLE = """
             CREATE TABLE IF NOT EXISTS %s (
